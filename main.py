@@ -1,33 +1,31 @@
 import requests
-from tabulate import tabulate
+import sys
 
 def check_status(subdomains_file):
-    # خواندن ساب دامین‌ها از فایل
-    with open(subdomains_file, 'r') as file:
-        subdomains = file.readlines()
+    try:
+        # باز کردن فایل ورودی
+        with open(subdomains_file, 'r') as file:
+            subdomains = file.readlines()
 
-    # حذف فضای خالی از ابتدا و انتهای هر خط
-    subdomains = [subdomain.strip() for subdomain in subdomains]
-
-    # لیست برای ذخیره نتایج
-    results = []
-
-    # چک کردن وضعیت هر ساب دامین
-    for subdomain in subdomains:
-        url = f'http://{subdomain}'
-        try:
-            response = requests.get(url, timeout=5)
-            status_code = response.status_code
-        except requests.exceptions.RequestException:
-            status_code = 'Failed'
-
-        # اضافه کردن نتیجه به لیست
-        results.append([subdomain, status_code])
-
-    # نمایش نتایج به صورت جدول
-    print(tabulate(results, headers=["Subdomain", "Status Code"], tablefmt="grid"))
+        # بررسی وضعیت هر ساب‌دامین
+        for subdomain in subdomains:
+            subdomain = subdomain.strip()  # حذف فاصله‌ها و کاراکترهای اضافی
+            url = f"http://{subdomain}"  # آدرس URL ساب‌دامین
+            try:
+                response = requests.get(url)
+                print(f"{subdomain} - Status Code: {response.status_code}")
+            except requests.exceptions.RequestException as e:
+                print(f"{subdomain} - Error: {str(e)}")
+    except FileNotFoundError:
+        print(f"File '{subdomains_file}' not found.")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
 
 if __name__ == "__main__":
-    # نام فایل ساب دامین‌ها را وارد کنید
-    subdomains_file = 'subdomains.txt'
+    # گرفتن نام فایل از ورودی
+    if len(sys.argv) != 2:
+        print("Usage: python3 main.py <subdomains_file>")
+        sys.exit(1)
+
+    subdomains_file = sys.argv[1]  # گرفتن نام فایل از ورودی
     check_status(subdomains_file)
